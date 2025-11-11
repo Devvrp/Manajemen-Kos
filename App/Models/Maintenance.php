@@ -19,16 +19,20 @@ class Maintenance
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
-    public function getAll()
+    public function getAll($branch_id = null)
     {
-        $stmt = $this->db->prepare("
-            SELECT m.*, r.nomor_kamar, u.nama_lengkap 
-            FROM maintenance_req m
-            JOIN rooms r ON m.room_id = r.room_id
-            JOIN users u ON m.user_id = u.user_id
-            ORDER BY m.status_laporan ASC, m.tanggal_lapor DESC
-        ");
-        $stmt->execute();
+        $sql = "SELECT m.*, r.nomor_kamar, u.nama_lengkap 
+                FROM maintenance_req m
+                JOIN rooms r ON m.room_id = r.room_id
+                JOIN users u ON m.user_id = u.user_id";
+        $params = [];
+        if ($branch_id) {
+            $sql .= " WHERE r.branch_id = ?";
+            $params[] = $branch_id;
+        }
+        $sql .= " ORDER BY m.status_laporan ASC, m.tanggal_lapor DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     public function findById($id)

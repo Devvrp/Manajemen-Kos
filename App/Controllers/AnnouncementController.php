@@ -3,27 +3,31 @@
 class AnnouncementController extends Controller
 {
     private $announcementModel;
+    private $branchModel;
     public function __construct()
     {
         Auth::protect();
         Auth::protectRole(['admin', 'superadmin']);
         $this->announcementModel = new Announcement();
+        $this->branchModel = new Branch();
     }
     public function index()
     {
-        $announcements = $this->announcementModel->getAll();
+        $branch_id = (Auth::checkRole('admin')) ? Auth::userBranchId() : null;
+        $announcements = $this->announcementModel->getAll($branch_id);
         $data = [
             'title' => 'Manajemen Pengumuman',
             'announcements' => $announcements
         ];
-        $this->view('announcements/index', $data);
+        $this->view('Announcements/index', $data);
     }
     public function create()
     {
         $data = [
-            'title' => 'Buat Pengumuman Baru'
+            'title' => 'Buat Pengumuman Baru',
+            'branches' => $this->branchModel->getAll()
         ];
-        $this->view('announcements/create', $data);
+        $this->view('Announcements/create', $data);
     }
     public function store()
     {
@@ -32,6 +36,7 @@ class AnnouncementController extends Controller
         }
         $data = [
             'user_id' => Auth::userId(),
+            'branch_id' => $_POST['branch_id'] ?? null,
             'judul' => $_POST['judul'] ?? '',
             'isi_pengumuman' => $_POST['isi_pengumuman'] ?? ''
         ];
@@ -53,9 +58,10 @@ class AnnouncementController extends Controller
         }
         $data = [
             'title' => 'Edit Pengumuman',
-            'announcement' => $announcement
+            'announcement' => $announcement,
+            'branches' => $this->branchModel->getAll()
         ];
-        $this->view('announcements/edit', $data);
+        $this->view('Announcements/edit', $data);
     }
     public function update()
     {
@@ -65,7 +71,8 @@ class AnnouncementController extends Controller
         $id = $_POST['id'] ?? 0;
         $data = [
             'judul' => $_POST['judul'] ?? '',
-            'isi_pengumuman' => $_POST['isi_pengumuman'] ?? ''
+            'isi_pengumuman' => $_POST['isi_pengumuman'] ?? '',
+            'branch_id' => $_POST['branch_id'] ?? null
         ];
         if (empty($data['judul']) || empty($data['isi_pengumuman'])) {
             $this->flash('error', 'Judul dan Isi Pengumuman wajib diisi.');

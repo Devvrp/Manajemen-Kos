@@ -12,13 +12,26 @@
                 <?php endforeach; ?>
             </select>
         </div>
+        <?php if (Auth::checkRole('superadmin')) : ?>
+        <div>
+            <label>Pilih Cabang:</label>
+            <select name="branch_id" id="branch-select" required>
+                <option value="">-- Pilih Cabang Dahulu --</option>
+                <?php foreach ($branches as $branch) : ?>
+                    <option value="<?= $branch['branch_id'] ?>"><?= htmlspecialchars($branch['nama_cabang']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
         <div>
             <label>Pilih Kamar:</label>
-            <select name="room_id" required>
+            <select name="room_id" id="room-select" required>
                 <option value="">-- Pilih Kamar (yang tersedia) --</option>
-                <?php foreach ($rooms as $room) : ?>
-                    <option value="<?= $room['room_id'] ?>"><?= htmlspecialchars($room['nomor_kamar']) ?> (Rp <?= number_format($room['harga_bulanan']) ?>)</option>
-                <?php endforeach; ?>
+                <?php if (Auth::checkRole('admin')) : ?>
+                    <?php foreach ($rooms as $room) : ?>
+                        <option value="<?= $room['room_id'] ?>"><?= htmlspecialchars($room['nomor_kamar']) ?> (Rp <?= number_format($room['harga_bulanan']) ?>)</option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
         </div>
         <div>

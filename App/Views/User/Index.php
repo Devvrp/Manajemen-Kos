@@ -9,7 +9,7 @@
                 <th>Nama Lengkap</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Status</th>
+                <th>Cabang (Jika Admin)</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -19,7 +19,7 @@
                     <td><?= htmlspecialchars($user['nama_lengkap']) ?></td>
                     <td><?= htmlspecialchars($user['email']) ?></td>
                     <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td><?= htmlspecialchars($user['status']) ?></td>
+                    <td><?= htmlspecialchars($user['nama_cabang'] ?? 'N/A') ?></td>
                     <td>
                         <a href="index.php?c=user&a=edit&id=<?= $user['user_id'] ?>" class="btn btn-warning">Edit</a>
                         <?php if ($user['user_id'] != Auth::userId()) : ?>

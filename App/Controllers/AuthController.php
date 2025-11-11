@@ -9,11 +9,17 @@ class AuthController extends Controller
     }
     public function login()
     {
-        $this->view('auth/login', ['title' => 'Login', 'errors' => [], 'old' => []]);
+        $this->view('Auth/login', ['title' => 'Login', 'errors' => [], 'old' => []]);
     }
     public function register()
     {
-        $this->view('auth/register', ['title' => 'Register', 'errors' => [], 'old' => []]);
+        $data = [
+            'title' => 'Register', 
+            'errors' => [], 
+            'old' => [],
+            'branches' => []
+        ];
+        $this->view('Auth/register', $data);
     }
     public function authenticate()
     {
@@ -25,10 +31,6 @@ class AuthController extends Controller
         $user = $this->userModel->findByEmail($email);
         if (!$user || !password_verify($password, $user['password'])) {
             $this->flash('error', 'Email atau password salah.');
-            $this->redirect('index.php?c=auth&a=login');
-        }
-        if ($user['status'] === 'banned') {
-            $this->flash('error', 'Akun Anda telah di-banned.');
             $this->redirect('index.php?c=auth&a=login');
         }
         Auth::login($user);
@@ -51,9 +53,10 @@ class AuthController extends Controller
             $data = [
                 'title' => 'Register',
                 'errors' => $validator->getErrors(),
-                'old' => $_POST
+                'old' => $_POST,
+                'branches' => []
             ];
-            $this->view('auth/register', $data);
+            $this->view('Auth/register', $data);
             return;
         }
         $this->userModel->create($_POST);

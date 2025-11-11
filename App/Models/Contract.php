@@ -19,17 +19,22 @@ class Contract
         $stmt->execute([$userId]);
         return $stmt->fetch();
     }
-    public function getAllActiveContracts()
+    public function getAllActiveContracts($branch_id = null)
     {
-        $stmt = $this->db->prepare("
-            SELECT c.*, u.nama_lengkap, r.nomor_kamar
-            FROM contracts c
-            JOIN users u ON c.user_id = u.user_id
-            JOIN rooms r ON c.room_id = r.room_id
-            WHERE c.status_kontrak = 'aktif'
-            ORDER BY u.nama_lengkap
-        ");
-        $stmt->execute();
+        $sql = "SELECT c.*, u.nama_lengkap, r.nomor_kamar, b.nama_cabang
+                FROM contracts c
+                JOIN users u ON c.user_id = u.user_id
+                JOIN rooms r ON c.room_id = r.room_id
+                JOIN branches b ON r.branch_id = b.branch_id
+                WHERE c.status_kontrak = 'aktif'";
+        $params = [];
+        if ($branch_id) {
+            $sql .= " AND r.branch_id = ?";
+            $params[] = $branch_id;
+        }
+        $sql .= " ORDER BY u.nama_lengkap";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     public function create($data)

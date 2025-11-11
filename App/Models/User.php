@@ -22,29 +22,31 @@ class User
     public function create($data)
     {
         $hashedPassword = password_hash($data['password'], PASSWORD_BCRYPT);
-        $stmt = $this->db->prepare("INSERT INTO users (nama_lengkap, email, password, role, status) VALUES (?, ?, ?, ?, ?)");
+        $branch_id = (isset($data['role']) && $data['role'] == 'admin') ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("INSERT INTO users (branch_id, nama_lengkap, email, password, role) VALUES (?, ?, ?, ?, ?)");
         return $stmt->execute([
+            $branch_id,
             $data['nama_lengkap'],
             $data['email'],
             $hashedPassword,
-            $data['role'] ?? 'penghuni',
-            $data['status'] ?? 'aktif'
+            $data['role'] ?? 'penghuni'
         ]);
     }
     public function getAll()
     {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE deleted_at IS NULL ORDER BY nama_lengkap");
+        $stmt = $this->db->prepare("SELECT u.*, b.nama_cabang FROM users u LEFT JOIN branches b ON u.branch_id = b.branch_id WHERE u.deleted_at IS NULL ORDER BY u.nama_lengkap");
         $stmt->execute();
         return $stmt->fetchAll();
     }
     public function update($id, $data)
     {
-        $stmt = $this->db->prepare("UPDATE users SET nama_lengkap = ?, email = ?, role = ?, status = ? WHERE user_id = ?");
+        $branch_id = (isset($data['role']) && $data['role'] == 'admin') ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("UPDATE users SET nama_lengkap = ?, email = ?, role = ?, branch_id = ? WHERE user_id = ?");
         return $stmt->execute([
             $data['nama_lengkap'],
             $data['email'],
             $data['role'],
-            $data['status'],
+            $branch_id,
             $id
         ]);
     }
@@ -74,7 +76,6 @@ class User
         $stmt = $this->db->prepare("
             SELECT * FROM users 
             WHERE role = 'penghuni' 
-            AND status = 'aktif' 
             AND deleted_at IS NULL
             AND user_id NOT IN (
                 SELECT user_id FROM contracts WHERE status_kontrak = 'aktif'

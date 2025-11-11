@@ -10,11 +10,21 @@ class Room
         $this->db = Database::getInstance()->getConnection();
         $this->qb = new QueryBuilder($this->db);
     }
-    public function getAll()
+    public function getAll($filters = [])
     {
-        return $this->qb->table($this->table)
-                    ->orderBy('nomor_kamar', 'ASC')
-                    ->get();
+        $query = $this->qb->table($this->table)
+                        ->select(['rooms.*', 'branches.nama_cabang'])
+                        ->join('branches', 'rooms.branch_id', '=', 'branches.branch_id');
+        if (!empty($filters['branch_id'])) {
+            $query->where('rooms.branch_id', '=', $filters['branch_id']);
+        }
+        if (!empty($filters['harga_max'])) {
+            $query->where('harga_bulanan', '<=', $filters['harga_max']);
+        }
+        if (!empty($filters['fasilitas'])) {
+            $query->where('fasilitas', 'LIKE', '%' . $filters['fasilitas'] . '%');
+        }
+        return $query->orderBy('nomor_kamar', 'ASC')->get();
     }
     public function findById($id)
     {
@@ -25,8 +35,10 @@ class Room
     public function create($data)
     {
         $insertData = [
+            'branch_id' => $data['branch_id'],
             'nomor_kamar' => $data['nomor_kamar'],
             'tipe_kamar' => $data['tipe_kamar'],
+            'fasilitas' => $data['fasilitas'],
             'harga_bulanan' => $data['harga_bulanan'],
             'status' => $data['status'] ?? 'tersedia'
         ];
@@ -35,29 +47,24 @@ class Room
     public function update($id, $data)
     {
         $updateData = [
+            'branch_id' => $data['branch_id'],
             'nomor_kamar' => $data['nomor_kamar'],
             'tipe_kamar' => $data['tipe_kamar'],
+            'fasilitas' => $data['fasilitas'],
             'harga_bulanan' => $data['harga_bulanan'],
             'status' => $data['status']
         ];
-        $stmt = $this->db->prepare("UPDATE rooms SET nomor_kamar = ?, tipe_kamar = ?, harga_bulanan = ?, status = ? WHERE room_id = ?");
-        return $stmt->execute([
-            $data['nomor_kamar'],
-            $data['tipe_kamar'],
-            $data['harga_bulanan'],
-            $data['status'],
-            $id
-        ]);
+        return $this->qb->table($this->table)->update('room_id', $id, $updateData);
     }
     public function delete($id)
     {
-        $stmt = $this->db->prepare("DELETE FROM rooms WHERE room_id = ?");
-        return $stmt->execute([$id]);
+        return $this->qb->table($this->table)->delete('room_id', $id);
     }
-    public function getAvailableRooms()
+    public function getAvailableRooms($branch_id)
     {
         return $this->qb->table($this->table)
                     ->where('status', '=', 'tersedia')
+                    ->where('branch_id', '=', $branch_id)
                     ->orderBy('nomor_kamar', 'ASC')
                     ->get();
     }

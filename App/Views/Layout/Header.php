@@ -30,6 +30,7 @@
                         <li><a href="index.php?c=admin&a=generateInvoices" onclick="return confirm('Yakin ingin generate tagihan bulan ini?')">Generate Tagihan</a></li>
                     <?php endif; ?>
                     <?php if (Auth::checkRole('superadmin')) : ?>
+                        <li><a href="index.php?c=branch&a=index">Manajemen Cabang</a></li>
                         <li><a href="index.php?c=user&a=index">Manajemen User</a></li>
                         <li><a href="index.php?c=admin&a=logs">Log Aktivitas</a></li>
                     <?php endif; ?>

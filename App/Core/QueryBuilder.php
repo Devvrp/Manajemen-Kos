@@ -120,7 +120,7 @@ class QueryBuilder
         $stmt = $this->pdo->prepare($this->query);
         return $stmt->execute($this->bindings);
     }
-    public function update($id, $data)
+    public function update($whereColumn, $id, $data)
     {
         $sets = [];
         foreach ($data as $column => $value) {
@@ -129,14 +129,14 @@ class QueryBuilder
         }
         $setString = implode(', ', $sets);
         $idPlaceholder = $this->addBinding($id);
-        $this->query = "UPDATE {$this->table} SET $setString WHERE room_id = $idPlaceholder";
+        $this->query = "UPDATE {$this->table} SET $setString WHERE $whereColumn = $idPlaceholder";
         $stmt = $this->pdo->prepare($this->query);
         return $stmt->execute($this->bindings);
     }
-    public function delete($id)
+    public function delete($whereColumn, $id)
     {
         $idPlaceholder = $this->addBinding($id);
-        $this->query = "DELETE FROM {$this->table} WHERE room_id = $idPlaceholder";
+        $this->query = "DELETE FROM {$this->table} WHERE $whereColumn = $idPlaceholder";
         $stmt = $this->pdo->prepare($this->query);
         return $stmt->execute($this->bindings);
     }

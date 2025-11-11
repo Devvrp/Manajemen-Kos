@@ -4,7 +4,7 @@
     </div>
     <h3>Detail Tagihan</h3>
     <p>Bulan: <?= htmlspecialchars($invoice['bulan_tagihan']) ?></p>
-    <p>Total: Rp <?= number_format($invoice['total_tagihan'], 0, ',', '.') ?></p>
+    <p>Total Tagihan: Rp <?= number_format($invoice['total_tagihan'], 0, ',', '.') ?></p>
     <p>Status: <?= htmlspecialchars($invoice['status_pembayaran']) ?></p>
     <hr>
     <p>Silakan lakukan pembayaran ke Rekening XYZ 123456789 a/n Pemilik Kos.</p>

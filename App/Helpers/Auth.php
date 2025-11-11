@@ -15,6 +15,7 @@ class Auth
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['user_nama'] = $user['nama_lengkap'];
         $_SESSION['user_role'] = $user['role'];
+        $_SESSION['user_branch_id'] = $user['branch_id'];
     }
     public static function logout()
     {
@@ -37,10 +38,16 @@ class Auth
         self::startSession();
         return $_SESSION['user_nama'] ?? 'Guest';
     }
+
     public static function userRole()
     {
         self::startSession();
         return $_SESSION['user_role'] ?? null;
+    }
+    public static function userBranchId()
+    {
+        self::startSession();
+        return $_SESSION['user_branch_id'] ?? null;
     }
     public static function checkRole($role)
     {

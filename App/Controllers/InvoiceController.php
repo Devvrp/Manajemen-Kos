@@ -16,7 +16,7 @@ class InvoiceController extends Controller
             'title' => 'Daftar Tagihan Saya',
             'invoices' => $invoices
         ];
-        $this->view('invoice/index', $data);
+        $this->view('Invoice/index', $data);
     }
     public function pay()
     {
@@ -28,9 +28,10 @@ class InvoiceController extends Controller
         }
         $data = [
             'title' => 'Konfirmasi Pembayaran: ' . htmlspecialchars($invoice['bulan_tagihan']),
-            'invoice' => $invoice
+            'invoice' => $invoice,
+            'errors' => []
         ];
-        $this->view('invoice/pay', $data);
+        $this->view('Invoice/pay', $data);
     }
     public function upload()
     {

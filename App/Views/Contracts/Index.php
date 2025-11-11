@@ -8,6 +8,9 @@
             <tr>
                 <th>Nama Penghuni</th>
                 <th>Nomor Kamar</th>
+                <?php if (Auth::checkRole('superadmin')) : ?>
+                    <th>Cabang</th>
+                <?php endif; ?>
                 <th>Tanggal Masuk</th>
                 <th>Aksi</th>
             </tr>
@@ -15,13 +18,16 @@
         <tbody>
             <?php if (empty($contracts)) : ?>
                 <tr>
-                    <td colspan="4" style="text-align: center;">Belum ada kontrak aktif.</td>
+                    <td colspan="5" style="text-align: center;">Belum ada kontrak aktif.</td>
                 </tr>
             <?php else : ?>
                 <?php foreach ($contracts as $contract) : ?>
                     <tr>
                         <td><?= htmlspecialchars($contract['nama_lengkap']) ?></td>
                         <td><?= htmlspecialchars($contract['nomor_kamar']) ?></td>
+                        <?php if (Auth::checkRole('superadmin')) : ?>
+                            <td><?= htmlspecialchars($contract['nama_cabang']) ?></td>
+                        <?php endif; ?>
                         <td><?= htmlspecialchars($contract['tanggal_masuk']) ?></td>
                         <td>
                             <form action="index.php?c=contract&a=end" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menyelesaikan kontrak ini? Kamar akan dikosongkan.');">

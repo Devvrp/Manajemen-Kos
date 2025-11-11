@@ -24,18 +24,22 @@ class Invoice
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
-    public function getAllPendingVerification()
+    public function getAllPendingVerification($branch_id = null)
     {
-        $stmt = $this->db->prepare("
-            SELECT i.*, u.nama_lengkap, r.nomor_kamar
-            FROM invoices i
-            JOIN contracts c ON i.contract_id = c.contract_id
-            JOIN users u ON c.user_id = u.user_id
-            JOIN rooms r ON c.room_id = r.room_id
-            WHERE i.status_pembayaran = 'menunggu_verifikasi'
-            ORDER BY i.bulan_tagihan DESC
-        ");
-        $stmt->execute();
+        $sql = "SELECT i.*, u.nama_lengkap, r.nomor_kamar
+                FROM invoices i
+                JOIN contracts c ON i.contract_id = c.contract_id
+                JOIN users u ON c.user_id = u.user_id
+                JOIN rooms r ON c.room_id = r.room_id
+                WHERE i.status_pembayaran = 'menunggu_verifikasi'";
+        $params = [];
+        if ($branch_id) {
+            $sql .= " AND r.branch_id = ?";
+            $params[] = $branch_id;
+        }
+        $sql .= " ORDER BY i.bulan_tagihan DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     public function uploadProof($id, $fileName)

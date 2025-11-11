@@ -12,9 +12,11 @@ class FeedbackController extends Controller
     public function create()
     {
         $data = [
-            'title' => 'Kirim Kritik & Saran'
+            'title' => 'Kirim Kritik & Saran',
+            'errors' => [],
+            'old' => []
         ];
-        $this->view('feedbacks/create', $data);
+        $this->view('Feedbacks/create', $data);
     }
     public function store()
     {
@@ -26,9 +28,19 @@ class FeedbackController extends Controller
             'subjek' => $_POST['subjek'] ?? '',
             'isi_pesan' => $_POST['isi_pesan'] ?? ''
         ];
-        if (empty($data['subjek']) || empty($data['isi_pesan'])) {
-            $this->flash('error', 'Subjek dan Isi Pesan wajib diisi.');
-            $this->redirect('index.php?c=feedback&a=create');
+        $validator = new Validator();
+        $rules = [
+            'subjek' => 'required',
+            'isi_pesan' => 'required'
+        ];
+        if (!$validator->validate($data, $rules)) {
+            $viewData = [
+                'title' => 'Kirim Kritik & Saran',
+                'errors' => $validator->getErrors(),
+                'old' => $_POST
+            ];
+            $this->view('Feedbacks/create', $viewData);
+            return;
         }
         $this->feedbackModel->create($data);
         Log::record(Auth::userId(), 'Mengirim feedback baru dengan subjek: ' . $data['subjek']);

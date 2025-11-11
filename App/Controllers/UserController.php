@@ -3,11 +3,13 @@
 class UserController extends Controller
 {
     private $userModel;
+    private $branchModel;
     public function __construct()
     {
         Auth::protect();
         Auth::protectRole('superadmin');
         $this->userModel = new User();
+        $this->branchModel = new Branch();
     }
     public function index()
     {
@@ -16,7 +18,7 @@ class UserController extends Controller
             'title' => 'Manajemen User',
             'users' => $users
         ];
-        $this->view('user/index', $data);
+        $this->view('User/index', $data);
     }
     public function edit()
     {
@@ -28,9 +30,12 @@ class UserController extends Controller
         }
         $data = [
             'title' => 'Edit User: ' . htmlspecialchars($user['nama_lengkap']),
-            'user' => $user
+            'user' => $user,
+            'branches' => $this->branchModel->getAll(),
+            'errors' => [],
+            'old' => $user
         ];
-        $this->view('user/edit', $data);
+        $this->view('User/edit', $data);
     }
     public function update()
     {
@@ -38,6 +43,23 @@ class UserController extends Controller
             $this->redirect('index.php?c=user&a=index');
         }
         $id = $_POST['id'] ?? 0;
+        $validator = new Validator();
+        $rules = [
+            'nama_lengkap' => 'required',
+            'email' => 'required|email'
+        ];
+        if (!$validator->validate($_POST, $rules)) {
+            $user = $this->userModel->findById($id);
+            $data = [
+                'title' => 'Edit User: ' . htmlspecialchars($user['nama_lengkap']),
+                'user' => $user,
+                'branches' => $this->branchModel->getAll(),
+                'errors' => $validator->getErrors(),
+                'old' => $_POST
+            ];
+            $this->view('User/edit', $data);
+            return;
+        }
         $this->userModel->update($id, $_POST);
         Log::record(Auth::userId(), "Memperbarui user #$id: " . $_POST['email']);
         $this->flash('success', 'Data user berhasil diperbarui.');
@@ -65,7 +87,7 @@ class UserController extends Controller
             'title' => 'Recycle Bin - User',
             'users' => $users
         ];
-        $this->view('user/recycle', $data);
+        $this->view('User/recycle', $data);
     }
     public function restore()
     {

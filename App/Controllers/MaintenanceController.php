@@ -17,14 +17,16 @@ class MaintenanceController extends Controller
             'title' => 'Daftar Laporan Kerusakan Saya',
             'reports' => $reports
         ];
-        $this->view('maintenance/index', $data);
+        $this->view('Maintenance/index', $data);
     }
     public function create()
     {
         $data = [
-            'title' => 'Buat Laporan Kerusakan Baru'
+            'title' => 'Buat Laporan Kerusakan Baru',
+            'errors' => [],
+            'old' => []
         ];
-        $this->view('maintenance/create', $data);
+        $this->view('Maintenance/create', $data);
     }
     public function store()
     {
@@ -43,9 +45,16 @@ class MaintenanceController extends Controller
             'judul_laporan' => $_POST['judul_laporan'] ?? '',
             'deskripsi_kerusakan' => $_POST['deskripsi_kerusakan'] ?? ''
         ];
-        if (empty($data['judul_laporan'])) {
-            $this->flash('error', 'Judul laporan tidak boleh kosong.');
-            $this->redirect('index.php?c=maintenance&a=create');
+        $validator = new Validator();
+        $rules = ['judul_laporan' => 'required'];
+        if (!$validator->validate($data, $rules)) {
+            $viewData = [
+                'title' => 'Buat Laporan Kerusakan Baru',
+                'errors' => $validator->getErrors(),
+                'old' => $_POST
+            ];
+            $this->view('Maintenance/create', $viewData);
+            return;
         }
         $this->maintenanceModel->create($data);
         $this->flash('success', 'Laporan kerusakan berhasil dikirim.');

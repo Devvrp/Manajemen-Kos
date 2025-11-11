@@ -15,14 +15,16 @@ class AdminController extends Controller
         $this->feedbackModel = new Feedback();
         $this->logModel = new ActivityLog();
     }
+
     public function reports()
     {
-        $reports = $this->maintenanceModel->getAll();
+        $branch_id = (Auth::checkRole('admin')) ? Auth::userBranchId() : null;
+        $reports = $this->maintenanceModel->getAll($branch_id);
         $data = [
             'title' => 'Kelola Laporan Kerusakan',
             'reports' => $reports
         ];
-        $this->view('admin/reports', $data);
+        $this->view('Admin/reports', $data);
     }
     public function updateReportStatus()
     {
@@ -43,12 +45,13 @@ class AdminController extends Controller
     }
     public function payments()
     {
-        $invoices = $this->invoiceModel->getAllPendingVerification();
+        $branch_id = (Auth::checkRole('admin')) ? Auth::userBranchId() : null;
+        $invoices = $this->invoiceModel->getAllPendingVerification($branch_id);
         $data = [
             'title' => 'Verifikasi Pembayaran',
             'invoices' => $invoices
         ];
-        $this->view('admin/payments', $data);
+        $this->view('Admin/payments', $data);
     }
     public function verifyPayment()
     {
@@ -84,7 +87,7 @@ class AdminController extends Controller
             'title' => 'Kritik & Saran Masuk',
             'feedbacks' => $feedbacks
         ];
-        $this->view('admin/feedbacks', $data);
+        $this->view('Admin/feedbacks', $data);
     }
     public function logs()
     {
@@ -94,6 +97,6 @@ class AdminController extends Controller
             'title' => 'Log Aktivitas Sistem',
             'logs' => $logs
         ];
-        $this->view('admin/logs', $data);
+        $this->view('Admin/logs', $data);
     }
 }

@@ -7,16 +7,21 @@ class Announcement
     {
         $this->db = Database::getInstance()->getConnection();
     }
-    public function getAll($limit = 100)
+    public function getAll($branch_id = null, $limit = 100)
     {
-        $stmt = $this->db->prepare("
-            SELECT a.*, u.nama_lengkap 
-            FROM announcements a
-            JOIN users u ON a.user_id = u.user_id
-            ORDER BY a.created_at DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$limit]);
+        $sql = "SELECT a.*, u.nama_lengkap, b.nama_cabang 
+                FROM announcements a
+                JOIN users u ON a.user_id = u.user_id
+                LEFT JOIN branches b ON a.branch_id = b.branch_id";
+        $params = [];
+        if ($branch_id) {
+            $sql .= " WHERE (a.branch_id = ? OR a.branch_id IS NULL)";
+            $params[] = $branch_id;
+        }
+        $sql .= " ORDER BY a.created_at DESC LIMIT ?";
+        $params[] = $limit;
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     public function findById($id)
@@ -27,19 +32,23 @@ class Announcement
     }
     public function create($data)
     {
-        $stmt = $this->db->prepare("INSERT INTO announcements (user_id, judul, isi_pengumuman) VALUES (?, ?, ?)");
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("INSERT INTO announcements (user_id, branch_id, judul, isi_pengumuman) VALUES (?, ?, ?, ?)");
         return $stmt->execute([
             $data['user_id'],
+            $branch_id,
             $data['judul'],
             $data['isi_pengumuman']
         ]);
     }
     public function update($id, $data)
     {
-        $stmt = $this->db->prepare("UPDATE announcements SET judul = ?, isi_pengumuman = ? WHERE announcement_id = ?");
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("UPDATE announcements SET judul = ?, isi_pengumuman = ?, branch_id = ? WHERE announcement_id = ?");
         return $stmt->execute([
             $data['judul'],
             $data['isi_pengumuman'],
+            $branch_id,
             $id
         ]);
     }

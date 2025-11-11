@@ -9,13 +9,14 @@
                 <th>Tanggal</th>
                 <th>Judul</th>
                 <th>Pembuat</th>
+                <th>Cabang Target</th>
                 <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($announcements)) : ?>
                 <tr>
-                    <td colspan="4" style="text-align: center;">Belum ada pengumuman.</td>
+                    <td colspan="5" style="text-align: center;">Belum ada pengumuman.</td>
                 </tr>
             <?php else : ?>
                 <?php foreach ($announcements as $announcement) : ?>
@@ -23,6 +24,7 @@
                         <td><?= htmlspecialchars($announcement['created_at']) ?></td>
                         <td><?= htmlspecialchars($announcement['judul']) ?></td>
                         <td><?= htmlspecialchars($announcement['nama_lengkap']) ?></td>
+                        <td><?= htmlspecialchars($announcement['nama_cabang'] ?? 'Semua Cabang') ?></td>
                         <td>
                             <a href="index.php?c=announcement&a=edit&id=<?= $announcement['announcement_id'] ?>" class="btn btn-warning">Edit</a>
                             <form action="index.php?c=announcement&a=destroy" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menghapus pengumuman ini?');">
