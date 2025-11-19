@@ -40,13 +40,12 @@ class User
     }
     public function update($id, $data)
     {
-        $branch_id = (isset($data['role']) && $data['role'] == 'admin') ? $data['branch_id'] : null;
         $stmt = $this->db->prepare("UPDATE users SET nama_lengkap = ?, email = ?, role = ?, branch_id = ? WHERE user_id = ?");
         return $stmt->execute([
             $data['nama_lengkap'],
             $data['email'],
             $data['role'],
-            $branch_id,
+            $data['branch_id'],
             $id
         ]);
     }
