@@ -32,6 +32,7 @@
                         <td>
                             <form action="index.php?c=contract&a=end" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menyelesaikan kontrak ini? Kamar akan dikosongkan.');">
                                 <input type="hidden" name="contract_id" value="<?= $contract['contract_id'] ?>">
+                                <input type="hidden" name="user_id" value="<?= $contract['user_id'] ?>">
                                 <button type="submit" class="btn-warning">Selesaikan Kontrak</button>
                             </form>
                         </td>
