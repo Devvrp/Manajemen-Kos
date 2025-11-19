@@ -81,8 +81,20 @@ class ContractController extends Controller
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('index.php?c=contract&a=index');
         }
+
         $id = $_POST['contract_id'] ?? 0;
+        $userid = $_POST['user_id'] ?? 0;
+        $user = $this->userModel->findById($_POST['user_id']);
+
+        $datauser = [
+            'nama_lengkap' => $user['nama_lengkap'],
+            'email' => $user['email'],
+            'role' => $user['role'],
+            'branch_id' => null
+        ];
+
         if ($this->contractModel->endContract($id)) {
+            $this->userModel->update($userid, $datauser);
             Log::record(Auth::userId(), "Menyelesaikan kontrak #$id");
             $this->flash('success', 'Kontrak telah diselesaikan. Kamar kembali tersedia.');
         } else {
