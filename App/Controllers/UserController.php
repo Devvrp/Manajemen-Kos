@@ -1,111 +1,88 @@
 <?php
 
-class UserController extends Controller
+class User
 {
-    private $userModel;
-    private $branchModel;
+    private $db;
     public function __construct()
     {
-        Auth::protect();
-        Auth::protectRole('superadmin');
-        $this->userModel = new User();
-        $this->branchModel = new Branch();
+        $this->db = Database::getInstance()->getConnection();
     }
-    public function index()
+    public function findByEmail($email)
     {
-        $users = $this->userModel->getAll();
-        $data = [
-            'title' => 'Manajemen User',
-            'users' => $users
-        ];
-        $this->view('User/index', $data);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ? AND deleted_at IS NULL");
+        $stmt->execute([$email]);
+        return $stmt->fetch();
     }
-    public function edit()
+    public function findById($id)
     {
-        $id = $_GET['id'] ?? 0;
-        $user = $this->userModel->findById($id);
-        if (!$user) {
-            $this->flash('error', 'User tidak ditemukan.');
-            $this->redirect('index.php?c=user&a=index');
-        }
-        $data = [
-            'title' => 'Edit User: ' . htmlspecialchars($user['nama_lengkap']),
-            'user' => $user,
-            'branches' => $this->branchModel->getAll(),
-            'errors' => [],
-            'old' => $user
-        ];
-        $this->view('User/edit', $data);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE user_id = ? AND deleted_at IS NULL");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
     }
-    public function update()
+    public function create($data)
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('index.php?c=user&a=index');
-        }
-        $id = $_POST['id'] ?? 0;
-        $validator = new Validator();
-        $rules = [
-            'nama_lengkap' => 'required',
-            'email' => 'required|email'
-        ];
-        if (!$validator->validate($_POST, $rules)) {
-            $user = $this->userModel->findById($id);
-            $data = [
-                'title' => 'Edit User: ' . htmlspecialchars($user['nama_lengkap']),
-                'user' => $user,
-                'branches' => $this->branchModel->getAll(),
-                'errors' => $validator->getErrors(),
-                'old' => $_POST
-            ];
-            $this->view('User/edit', $data);
-            return;
-        }
-        $this->userModel->update($id, $_POST);
-        Log::record(Auth::userId(), "Memperbarui user #$id: " . $_POST['email']);
-        $this->flash('success', 'Data user berhasil diperbarui.');
-        $this->redirect('index.php?c=user&a=index');
+        $hashedPassword = password_hash($data['password'], PASSWORD_BCRYPT);
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("INSERT INTO users (branch_id, nama_lengkap, email, password, role) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([
+            $branch_id,
+            $data['nama_lengkap'],
+            $data['email'],
+            $hashedPassword,
+            $data['role'] ?? 'penghuni'
+        ]);
     }
-    public function destroy()
+    public function getAll()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('index.php?c=user&a=index');
-        }
-        $id = $_POST['id'] ?? 0;
-        if ($id == Auth::userId()) {
-            $this->flash('error', 'Anda tidak bisa menghapus akun Anda sendiri.');
-            $this->redirect('index.php?c=user&a=index');
-        }
-        $this->userModel->delete($id);
-        Log::record(Auth::userId(), "Melakukan soft delete pada user #$id");
-        $this->flash('success', 'User berhasil dihapus (soft delete).');
-        $this->redirect('index.php?c=user&a=index');
+        $stmt = $this->db->prepare("SELECT u.*, b.nama_cabang FROM users u LEFT JOIN branches b ON u.branch_id = b.branch_id WHERE u.deleted_at IS NULL ORDER BY u.nama_lengkap");
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
-    public function recycleBin()
+    public function update($id, $data)
     {
-        $users = $this->userModel->getAllDeleted();
-        $data = [
-            'title' => 'Recycle Bin - User',
-            'users' => $users
-        ];
-        $this->view('User/recycle', $data);
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
+        $stmt = $this->db->prepare("UPDATE users SET nama_lengkap = ?, email = ?, role = ?, branch_id = ? WHERE user_id = ?");
+        return $stmt->execute([
+            $data['nama_lengkap'],
+            $data['email'],
+            $data['role'],
+            $branch_id,
+            $id
+        ]);
     }
-    public function restore()
+    public function delete($id)
     {
-        $id = $_GET['id'] ?? 0;
-        $this->userModel->restore($id);
-        Log::record(Auth::userId(), "Memulihkan user #$id dari recycle bin");
-        $this->flash('success', 'User berhasil dipulihkan.');
-        $this->redirect('index.php?c=user&a=recycleBin');
+        $stmt = $this->db->prepare("UPDATE users SET deleted_at = NOW() WHERE user_id = ?");
+        return $stmt->execute([$id]);
     }
-    public function forceDelete()
+    public function getAllDeleted()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('index.php?c=user&a=recycleBin');
-        }
-        $id = $_POST['id'] ?? 0;
-        $this->userModel->forceDelete($id);
-        Log::record(Auth::userId(), "Menghapus permanen user #$id");
-        $this->flash('success', 'User berhasil dihapus permanen.');
-        $this->redirect('index.php?c=user&a=recycleBin');
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    public function restore($id)
+    {
+        $stmt = $this->db->prepare("UPDATE users SET deleted_at = NULL WHERE user_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function forceDelete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM users WHERE user_id = ? AND deleted_at IS NOT NULL");
+        return $stmt->execute([$id]);
+    }
+    public function getAvailableTenants()
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM users 
+            WHERE role = 'penghuni' 
+            AND deleted_at IS NULL
+            AND user_id NOT IN (
+                SELECT user_id FROM contracts WHERE status_kontrak = 'aktif'
+            )
+            ORDER BY nama_lengkap
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 }
