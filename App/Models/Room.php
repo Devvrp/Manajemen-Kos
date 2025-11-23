@@ -14,9 +14,13 @@ class Room
     {
         $query = $this->qb->table($this->table)
                         ->select(['rooms.*', 'branches.nama_cabang'])
-                        ->join('branches', 'rooms.branch_id', '=', 'branches.branch_id');
+                        ->join('branches', 'rooms.branch_id', '=', 'branches.branch_id')
+                        ->whereNull('rooms.deleted_at');
         if (!empty($filters['branch_id'])) {
             $query->where('rooms.branch_id', '=', $filters['branch_id']);
+        }
+        if (!empty($filters['status'])) {
+            $query->where('status', '=', $filters['status']);
         }
         if (!empty($filters['harga_max'])) {
             $query->where('harga_bulanan', '<=', $filters['harga_max']);
@@ -25,6 +29,15 @@ class Room
             $query->where('fasilitas', 'LIKE', '%' . $filters['fasilitas'] . '%');
         }
         return $query->orderBy('nomor_kamar', 'ASC')->get();
+    }
+    public function getAllDeleted()
+    {
+        return $this->qb->table($this->table)
+                    ->select(['rooms.*', 'branches.nama_cabang'])
+                    ->join('branches', 'rooms.branch_id', '=', 'branches.branch_id')
+                    ->whereNotNull('rooms.deleted_at')
+                    ->orderBy('rooms.deleted_at', 'DESC')
+                    ->get();
     }
     public function findById($id)
     {
@@ -58,6 +71,16 @@ class Room
     }
     public function delete($id)
     {
+        $stmt = $this->db->prepare("UPDATE rooms SET deleted_at = NOW() WHERE room_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function restore($id)
+    {
+        $stmt = $this->db->prepare("UPDATE rooms SET deleted_at = NULL WHERE room_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function forceDelete($id)
+    {
         return $this->qb->table($this->table)->delete('room_id', $id);
     }
     public function getAvailableRooms($branch_id)
@@ -65,6 +88,7 @@ class Room
         return $this->qb->table($this->table)
                     ->where('status', '=', 'tersedia')
                     ->where('branch_id', '=', $branch_id)
+                    ->whereNull('deleted_at')
                     ->orderBy('nomor_kamar', 'ASC')
                     ->get();
     }

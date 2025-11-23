@@ -4,12 +4,14 @@ class RoomController extends Controller
 {
     private $roomModel;
     private $branchModel;
+    private $roomTypeModel;
     public function __construct()
     {
         Auth::protect();
         Auth::protectRole(['admin', 'superadmin']);
         $this->roomModel = new Room();
         $this->branchModel = new Branch();
+        $this->roomTypeModel = new RoomType();
     }
     public function index()
     {
@@ -31,12 +33,45 @@ class RoomController extends Controller
         ];
         $this->view('Rooms/index', $data);
     }
+    public function recycleBin()
+    {
+        Auth::protectRole('superadmin');
+        $rooms = $this->roomModel->getAllDeleted();
+        $data = [
+            'title' => 'Recycle Bin - Kamar',
+            'rooms' => $rooms
+        ];
+        $this->view('Rooms/recycle', $data);
+    }
+    public function restore()
+    {
+        Auth::protectRole('superadmin');
+        $id = $_GET['id'] ?? 0;
+        $this->roomModel->restore($id);
+        Log::record(Auth::userId(), "Memulihkan kamar #$id");
+        $this->flash('success', 'Kamar berhasil dipulihkan.');
+        $this->redirect('index.php?c=room&a=recycleBin');
+    }
+    public function forceDelete()
+    {
+        Auth::protectRole('superadmin');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=room&a=recycleBin');
+        }
+        $id = $_POST['id'] ?? 0;
+        $this->roomModel->forceDelete($id);
+        Log::record(Auth::userId(), "Menghapus permanen kamar #$id");
+        $this->flash('success', 'Kamar berhasil dihapus permanen.');
+        $this->redirect('index.php?c=room&a=recycleBin');
+    }
     public function create()
     {
         $branches = (Auth::checkRole('superadmin')) ? $this->branchModel->getAll() : [];
+        $types = $this->roomTypeModel->getAll();
         $data = [
             'title' => 'Tambah Kamar Baru',
             'branches' => $branches,
+            'types' => $types,
             'errors' => [],
             'old' => []
         ];
@@ -56,14 +91,16 @@ class RoomController extends Controller
             'nomor_kamar' => 'required',
             'harga_bulanan' => 'required'
         ];
-        if(Auth::checkRole('superadmin')) {
+        if (Auth::checkRole('superadmin')) {
             $rules['branch_id'] = 'required';
         }
         if (!$validator->validate($data, $rules)) {
             $branches = (Auth::checkRole('superadmin')) ? $this->branchModel->getAll() : [];
+            $types = $this->roomTypeModel->getAll();
             $viewData = [
                 'title' => 'Tambah Kamar Baru',
                 'branches' => $branches,
+                'types' => $types,
                 'errors' => $validator->getErrors(),
                 'old' => $_POST
             ];
@@ -88,10 +125,12 @@ class RoomController extends Controller
             $this->redirect('index.php?c=room&a=index');
         }
         $branches = (Auth::checkRole('superadmin')) ? $this->branchModel->getAll() : [];
+        $types = $this->roomTypeModel->getAll();
         $data = [
             'title' => 'Edit Kamar: ' . htmlspecialchars($room['nomor_kamar']),
             'room' => $room,
             'branches' => $branches,
+            'types' => $types,
             'errors' => [],
             'old' => $room
         ];
@@ -117,17 +156,19 @@ class RoomController extends Controller
             'nomor_kamar' => 'required',
             'harga_bulanan' => 'required'
         ];
-        if(Auth::checkRole('superadmin')) {
+        if (Auth::checkRole('superadmin')) {
             $rules['branch_id'] = 'required';
         }
         if (!$validator->validate($data, $rules)) {
             $branches = (Auth::checkRole('superadmin')) ? $this->branchModel->getAll() : [];
+            $types = $this->roomTypeModel->getAll();
             $data['title'] = 'Edit Kamar: ' . htmlspecialchars($data['nomor_kamar']);
             $data['errors'] = $validator->getErrors();
             $data['old'] = $_POST;
             $data['room'] = $_POST;
             $data['room']['room_id'] = $id;
             $data['branches'] = $branches;
+            $data['types'] = $types;
             $this->view('Rooms/edit', $data);
             return;
         }
@@ -138,14 +179,13 @@ class RoomController extends Controller
     }
     public function destroy()
     {
-        Auth::protectRole('superadmin');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('index.php?c=room&a=index');
         }
         $id = $_POST['id'] ?? 0;
         $this->roomModel->delete($id);
-        Log::record(Auth::userId(), "Menghapus kamar #$id");
-        $this->flash('success', 'Data kamar berhasil dihapus.');
+        Log::record(Auth::userId(), "Menghapus kamar #$id (Soft Delete)");
+        $this->flash('success', 'Data kamar berhasil dipindahkan ke Recycle Bin.');
         $this->redirect('index.php?c=room&a=index');
     }
 }

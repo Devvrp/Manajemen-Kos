@@ -26,16 +26,16 @@
                         <td><?= htmlspecialchars($invoice['nomor_kamar']) ?></td>
                         <td>Rp <?= number_format($invoice['total_tagihan'], 0, ',', '.') ?></td>
                         <td>
-                            <a href="Public/uploads/payments/<?= htmlspecialchars($invoice['file_bukti_bayar']) ?>" target="_blank" class="btn btn-secondary">Lihat Bukti</a>
+                            <a href="uploads/payments/<?= htmlspecialchars($invoice['file_bukti_bayar']) ?>" target="_blank" class="btn btn-secondary btn-sm">Lihat Bukti</a>
                         </td>
                         <td>
                             <form action="index.php?c=admin&a=verifyPayment" method="POST" style="display:inline;">
                                 <input type="hidden" name="invoice_id" value="<?= $invoice['invoice_id'] ?>">
-                                <button type="submit" name="action" value="approve" class="btn-success">Setujui</button>
+                                <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">Setujui</button>
                             </form>
                             <form action="index.php?c=admin&a=verifyPayment" method="POST" style="display:inline;">
                                 <input type="hidden" name="invoice_id" value="<?= $invoice['invoice_id'] ?>">
-                                <button type="submit" name="action" value="reject" class="btn-danger">Tolak</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">Tolak</button>
                             </form>
                         </td>
                     </tr>

@@ -15,7 +15,6 @@ class AdminController extends Controller
         $this->feedbackModel = new Feedback();
         $this->logModel = new ActivityLog();
     }
-
     public function reports()
     {
         $branch_id = (Auth::checkRole('admin')) ? Auth::userBranchId() : null;
@@ -42,6 +41,48 @@ class AdminController extends Controller
             $this->flash('error', 'Gagal memperbarui status.');
         }
         $this->redirect('index.php?c=admin&a=reports');
+    }
+    public function destroyReport()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=admin&a=reports');
+        }
+        $id = $_POST['request_id'] ?? 0;
+        if ($this->maintenanceModel->delete($id)) {
+            Log::record(Auth::userId(), "Menghapus laporan kerusakan #$id (Soft Delete)");
+            $this->flash('success', 'Laporan kerusakan dipindahkan ke Recycle Bin.');
+        } else {
+            $this->flash('error', 'Gagal menghapus laporan.');
+        }
+        $this->redirect('index.php?c=admin&a=reports');
+    }
+    public function reportRecycleBin()
+    {
+        $reports = $this->maintenanceModel->getAllDeleted();
+        $data = [
+            'title' => 'Recycle Bin - Laporan Kerusakan',
+            'reports' => $reports
+        ];
+        $this->view('Admin/reportRecycle', $data);
+    }
+    public function restoreReport()
+    {
+        $id = $_GET['id'] ?? 0;
+        $this->maintenanceModel->restore($id);
+        Log::record(Auth::userId(), "Memulihkan laporan kerusakan #$id");
+        $this->flash('success', 'Laporan berhasil dipulihkan.');
+        $this->redirect('index.php?c=admin&a=reportRecycleBin');
+    }
+    public function forceDeleteReport()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=admin&a=reportRecycleBin');
+        }
+        $id = $_POST['id'] ?? 0;
+        $this->maintenanceModel->forceDelete($id);
+        Log::record(Auth::userId(), "Menghapus permanen laporan kerusakan #$id");
+        $this->flash('success', 'Laporan berhasil dihapus permanen.');
+        $this->redirect('index.php?c=admin&a=reportRecycleBin');
     }
     public function payments()
     {
@@ -88,6 +129,45 @@ class AdminController extends Controller
             'feedbacks' => $feedbacks
         ];
         $this->view('Admin/feedbacks', $data);
+    }
+    public function destroyFeedback()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=admin&a=feedbacks');
+        }
+        $id = $_POST['id'] ?? 0;
+        $this->feedbackModel->delete($id);
+        Log::record(Auth::userId(), "Menghapus feedback #$id (Soft Delete)");
+        $this->flash('success', 'Feedback berhasil dipindahkan ke Recycle Bin.');
+        $this->redirect('index.php?c=admin&a=feedbacks');
+    }
+    public function feedbackRecycleBin()
+    {
+        $feedbacks = $this->feedbackModel->getAllDeleted();
+        $data = [
+            'title' => 'Recycle Bin - Kritik & Saran',
+            'feedbacks' => $feedbacks
+        ];
+        $this->view('Admin/feedbackRecycle', $data);
+    }
+    public function restoreFeedback()
+    {
+        $id = $_GET['id'] ?? 0;
+        $this->feedbackModel->restore($id);
+        Log::record(Auth::userId(), "Memulihkan feedback #$id");
+        $this->flash('success', 'Feedback berhasil dipulihkan.');
+        $this->redirect('index.php?c=admin&a=feedbackRecycleBin');
+    }
+    public function forceDeleteFeedback()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=admin&a=feedbackRecycleBin');
+        }
+        $id = $_POST['id'] ?? 0;
+        $this->feedbackModel->forceDelete($id);
+        Log::record(Auth::userId(), "Menghapus permanen feedback #$id");
+        $this->flash('success', 'Feedback berhasil dihapus permanen.');
+        $this->redirect('index.php?c=admin&a=feedbackRecycleBin');
     }
     public function logs()
     {

@@ -21,14 +21,36 @@
                     <tr>
                         <td><?= htmlspecialchars($invoice['bulan_tagihan']) ?></td>
                         <td>Rp <?= number_format($invoice['total_tagihan'], 0, ',', '.') ?></td>
-                        <td><?= htmlspecialchars($invoice['status_pembayaran']) ?></td>
+                        <td>
+                            <?php
+                            $statusLabel = '';
+                            $statusColor = '';
+                            switch ($invoice['status_pembayaran']) {
+                                case 'belum_bayar':
+                                    $statusLabel = 'Belum Membayar';
+                                    $statusColor = 'color: var(--danger); font-weight: 600;';
+                                    break;
+                                case 'menunggu_verifikasi':
+                                    $statusLabel = 'Menunggu Verifikasi';
+                                    $statusColor = 'color: var(--warning); font-weight: 600;';
+                                    break;
+                                case 'lunas':
+                                    $statusLabel = 'Lunas';
+                                    $statusColor = 'color: var(--success); font-weight: 600;';
+                                    break;
+                                default:
+                                    $statusLabel = htmlspecialchars($invoice['status_pembayaran']);
+                            }
+                            ?>
+                            <span style="<?= $statusColor ?>"><?= $statusLabel ?></span>
+                        </td>
                         <td>
                             <?php if ($invoice['status_pembayaran'] == 'belum_bayar') : ?>
-                                <a href="index.php?c=invoice&a=pay&id=<?= $invoice['invoice_id'] ?>" class="btn">Bayar</a>
+                                <a href="index.php?c=invoice&a=pay&id=<?= $invoice['invoice_id'] ?>" class="btn btn-sm">Bayar</a>
                             <?php elseif ($invoice['status_pembayaran'] == 'menunggu_verifikasi') : ?>
-                                Menunggu Verifikasi
+                                <span style="color: var(--text-muted); font-size: 13px;">Sedang diproses...</span>
                             <?php elseif ($invoice['status_pembayaran'] == 'lunas') : ?>
-                                <span style="color: green;">Lunas</span>
+                                <span style="color: var(--success);"><i class="fas fa-check-circle"></i> Selesai</span>
                             <?php endif; ?>
                         </td>
                     </tr>

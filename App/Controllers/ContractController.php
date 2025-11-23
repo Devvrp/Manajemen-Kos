@@ -5,6 +5,7 @@ class ContractController extends Controller
     private $contractModel;
     private $userModel;
     private $roomModel;
+    private $branchModel;
     public function __construct()
     {
         Auth::protect();
@@ -12,6 +13,7 @@ class ContractController extends Controller
         $this->contractModel = new Contract();
         $this->userModel = new User();
         $this->roomModel = new Room();
+        $this->branchModel = new Branch();
     }
     public function index()
     {
@@ -29,10 +31,10 @@ class ContractController extends Controller
         if ($branch_id) {
             $rooms = $this->roomModel->getAvailableRooms($branch_id);
         } else {
-            $rooms = []; 
+            $rooms = $this->roomModel->getAll(['status' => 'tersedia']); 
         }
         $tenants = $this->userModel->getAvailableTenants();
-        $branches = (Auth::checkRole('superadmin')) ? (new Branch())->getAll() : [];
+        $branches = (Auth::checkRole('superadmin')) ? $this->branchModel->getAll() : [];
         $data = [
             'title' => 'Buat Kontrak Baru',
             'tenants' => $tenants,
@@ -53,22 +55,11 @@ class ContractController extends Controller
             'room_id' => $_POST['room_id'] ?? 0,
             'tanggal_masuk' => $_POST['tanggal_masuk'] ?? ''
         ];
-
-        $user = $this->userModel->findById($_POST['user_id']);
-        $admin = $this->userModel->findById(Auth::userId());
-        $datauser = [
-            'nama_lengkap' => $user['nama_lengkap'],
-            'email' => $user['email'],
-            'role' => $user['role'],
-            'branch_id' => $admin['branch_id'] ?? 0
-        ];
-
         if (empty($data['user_id']) || empty($data['room_id']) || empty($data['tanggal_masuk'])) {
             $this->flash('error', 'Semua field wajib diisi.');
             $this->redirect('index.php?c=contract&a=create');
         }   
         if ($this->contractModel->create($data)) {
-            $this->userModel->update($data['user_id'], $datauser);
             Log::record(Auth::userId(), "Membuat kontrak baru untuk user #{$data['user_id']} di kamar #{$data['room_id']}");
             $this->flash('success', 'Kontrak baru berhasil dibuat.');
         } else {

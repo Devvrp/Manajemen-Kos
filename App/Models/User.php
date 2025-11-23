@@ -22,7 +22,7 @@ class User
     public function create($data)
     {
         $hashedPassword = password_hash($data['password'], PASSWORD_BCRYPT);
-        $branch_id = (isset($data['role']) && $data['role'] == 'admin') ? $data['branch_id'] : null;
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
         $stmt = $this->db->prepare("INSERT INTO users (branch_id, nama_lengkap, email, password, role) VALUES (?, ?, ?, ?, ?)");
         return $stmt->execute([
             $branch_id,
@@ -40,12 +40,13 @@ class User
     }
     public function update($id, $data)
     {
+        $branch_id = !empty($data['branch_id']) ? $data['branch_id'] : null;
         $stmt = $this->db->prepare("UPDATE users SET nama_lengkap = ?, email = ?, role = ?, branch_id = ? WHERE user_id = ?");
         return $stmt->execute([
             $data['nama_lengkap'],
             $data['email'],
             $data['role'],
-            $data['branch_id'],
+            $branch_id,
             $id
         ]);
     }

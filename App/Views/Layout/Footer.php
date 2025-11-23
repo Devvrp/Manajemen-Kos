@@ -1,7 +1,9 @@
 </main>
+        <?php if (Auth::isLoggedIn()) : ?>
         <footer class="content-footer">
-            <p>&copy; 2025 Manajemen Kos. All rights reserved.</p>
+            <p>&copy; Kelompok 7</p>
         </footer>
+        <?php endif; ?>
     </div> 
     <script src="JS/app.js"></script>
 </body>

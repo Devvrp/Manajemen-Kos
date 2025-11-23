@@ -9,7 +9,13 @@ class Branch
     }
     public function getAll()
     {
-        $stmt = $this->db->prepare("SELECT * FROM branches ORDER BY nama_cabang ASC");
+        $stmt = $this->db->prepare("SELECT * FROM branches WHERE deleted_at IS NULL ORDER BY nama_cabang ASC");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    public function getAllDeleted()
+    {
+        $stmt = $this->db->prepare("SELECT * FROM branches WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC");
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -37,6 +43,16 @@ class Branch
         ]);
     }
     public function delete($id)
+    {
+        $stmt = $this->db->prepare("UPDATE branches SET deleted_at = NOW() WHERE branch_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function restore($id)
+    {
+        $stmt = $this->db->prepare("UPDATE branches SET deleted_at = NULL WHERE branch_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function forceDelete($id)
     {
         $stmt = $this->db->prepare("DELETE FROM branches WHERE branch_id = ?");
         return $stmt->execute([$id]);

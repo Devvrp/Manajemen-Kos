@@ -24,15 +24,29 @@ class Maintenance
         $sql = "SELECT m.*, r.nomor_kamar, u.nama_lengkap 
                 FROM maintenance_req m
                 JOIN rooms r ON m.room_id = r.room_id
-                JOIN users u ON m.user_id = u.user_id";
+                JOIN users u ON m.user_id = u.user_id
+                WHERE m.deleted_at IS NULL";
         $params = [];
         if ($branch_id) {
-            $sql .= " WHERE r.branch_id = ?";
+            $sql .= " AND r.branch_id = ?";
             $params[] = $branch_id;
         }
         $sql .= " ORDER BY m.status_laporan ASC, m.tanggal_lapor DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+    public function getAllDeleted()
+    {
+        $stmt = $this->db->prepare("
+            SELECT m.*, r.nomor_kamar, u.nama_lengkap 
+            FROM maintenance_req m
+            JOIN rooms r ON m.room_id = r.room_id
+            JOIN users u ON m.user_id = u.user_id
+            WHERE m.deleted_at IS NOT NULL
+            ORDER BY m.deleted_at DESC
+        ");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     public function findById($id)
@@ -58,6 +72,21 @@ class Maintenance
     {
         $stmt = $this->db->prepare("UPDATE maintenance_req SET status_laporan = ? WHERE request_id = ?");
         return $stmt->execute([$status, $id]);
+    }
+    public function delete($id)
+    {
+        $stmt = $this->db->prepare("UPDATE maintenance_req SET deleted_at = NOW() WHERE request_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function restore($id)
+    {
+        $stmt = $this->db->prepare("UPDATE maintenance_req SET deleted_at = NULL WHERE request_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function forceDelete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM maintenance_req WHERE request_id = ?");
+        return $stmt->execute([$id]);
     }
     public function getActiveContract($userId)
     {

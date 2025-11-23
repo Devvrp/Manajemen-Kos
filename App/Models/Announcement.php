@@ -12,16 +12,30 @@ class Announcement
         $sql = "SELECT a.*, u.nama_lengkap, b.nama_cabang 
                 FROM announcements a
                 JOIN users u ON a.user_id = u.user_id
-                LEFT JOIN branches b ON a.branch_id = b.branch_id";
+                LEFT JOIN branches b ON a.branch_id = b.branch_id
+                WHERE a.deleted_at IS NULL";
         $params = [];
         if ($branch_id) {
-            $sql .= " WHERE (a.branch_id = ? OR a.branch_id IS NULL)";
+            $sql .= " AND (a.branch_id = ? OR a.branch_id IS NULL)";
             $params[] = $branch_id;
         }
         $sql .= " ORDER BY a.created_at DESC LIMIT ?";
         $params[] = $limit;
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+    public function getAllDeleted()
+    {
+        $stmt = $this->db->prepare("
+            SELECT a.*, u.nama_lengkap, b.nama_cabang 
+            FROM announcements a
+            JOIN users u ON a.user_id = u.user_id
+            LEFT JOIN branches b ON a.branch_id = b.branch_id
+            WHERE a.deleted_at IS NOT NULL
+            ORDER BY a.deleted_at DESC
+        ");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
     public function findById($id)
@@ -53,6 +67,16 @@ class Announcement
         ]);
     }
     public function delete($id)
+    {
+        $stmt = $this->db->prepare("UPDATE announcements SET deleted_at = NOW() WHERE announcement_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function restore($id)
+    {
+        $stmt = $this->db->prepare("UPDATE announcements SET deleted_at = NULL WHERE announcement_id = ?");
+        return $stmt->execute([$id]);
+    }
+    public function forceDelete($id)
     {
         $stmt = $this->db->prepare("DELETE FROM announcements WHERE announcement_id = ?");
         return $stmt->execute([$id]);

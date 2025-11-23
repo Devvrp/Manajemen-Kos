@@ -94,8 +94,36 @@ class BranchController extends Controller
         }
         $id = $_POST['id'] ?? 0;
         $this->branchModel->delete($id);
-        Log::record(Auth::userId(), 'Menghapus cabang #' . $id);
-        $this->flash('success', 'Data cabang berhasil dihapus.');
+        Log::record(Auth::userId(), 'Menghapus cabang #' . $id . ' (Soft Delete)');
+        $this->flash('success', 'Data cabang berhasil dipindahkan ke Recycle Bin.');
         $this->redirect('index.php?c=branch&a=index');
+    }
+    public function recycleBin()
+    {
+        $branches = $this->branchModel->getAllDeleted();
+        $data = [
+            'title' => 'Recycle Bin - Cabang',
+            'branches' => $branches
+        ];
+        $this->view('Branch/recycle', $data);
+    }
+    public function restore()
+    {
+        $id = $_GET['id'] ?? 0;
+        $this->branchModel->restore($id);
+        Log::record(Auth::userId(), "Memulihkan cabang #$id");
+        $this->flash('success', 'Cabang berhasil dipulihkan.');
+        $this->redirect('index.php?c=branch&a=recycleBin');
+    }
+    public function forceDelete()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('index.php?c=branch&a=recycleBin');
+        }
+        $id = $_POST['id'] ?? 0;
+        $this->branchModel->forceDelete($id);
+        Log::record(Auth::userId(), "Menghapus permanen cabang #$id");
+        $this->flash('success', 'Cabang berhasil dihapus permanen.');
+        $this->redirect('index.php?c=branch&a=recycleBin');
     }
 }
