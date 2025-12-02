@@ -6,7 +6,7 @@
         <div>
             <label>Pilih Penghuni:</label>
             <select name="user_id" required>
-                <option value="">-- Pilih Penghuni (yang belum punya kamar) --</option>
+                <option value="">Pilih Penghuni (yang belum punya kamar)</option>
                 <?php foreach ($tenants as $tenant) : ?>
                     <option value="<?= $tenant['user_id'] ?>"><?= htmlspecialchars($tenant['nama_lengkap']) ?> (<?= htmlspecialchars($tenant['email']) ?>)</option>
                 <?php endforeach; ?>
@@ -16,7 +16,7 @@
         <div>
             <label>Pilih Cabang:</label>
             <select name="branch_id" id="branch-select" required>
-                <option value="">-- Pilih Cabang Dahulu --</option>
+                <option value="">Pilih Cabang Dahulu</option>
                 <?php foreach ($branches as $branch) : ?>
                     <option value="<?= $branch['branch_id'] ?>"><?= htmlspecialchars($branch['nama_cabang']) ?></option>
                 <?php endforeach; ?>
@@ -26,7 +26,7 @@
         <div>
             <label>Pilih Kamar:</label>
             <select name="room_id" id="room-select" required>
-                <option value="">-- Pilih Kamar (yang tersedia) --</option>
+                <option value="">Pilih Kamar (yang tersedia)</option>
                 <?php if (Auth::checkRole('admin')) : ?>
                     <?php foreach ($rooms as $room) : ?>
                         <option value="<?= $room['room_id'] ?>"><?= htmlspecialchars($room['nomor_kamar']) ?> (Rp <?= number_format($room['harga_bulanan']) ?>)</option>

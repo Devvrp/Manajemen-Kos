@@ -7,7 +7,7 @@
         <div>
             <label>Cabang:</label>
             <select name="branch_id">
-                <option value="">-- Pilih Cabang --</option>
+                <option value="">Pilih Cabang</option>
                 <?php foreach ($branches as $branch) : ?>
                     <option value="<?= $branch['branch_id'] ?>" <?= (get_value('branch_id', $old) == $branch['branch_id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($branch['nama_cabang']) ?>
@@ -25,7 +25,7 @@
         <div style="margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
             <label>Pilih Template Tipe Kamar (Opsi Cepat):</label>
             <select id="typeSelector" onchange="fillRoomData()">
-                <option value="">-- Pilih Template --</option>
+                <option value="">Pilih Template</option>
                 <?php foreach ($types as $type) : ?>
                     <option value="<?= htmlspecialchars($type['nama_tipe']) ?>" 
                             data-fasilitas="<?= htmlspecialchars($type['fasilitas_default']) ?>"

@@ -25,7 +25,7 @@
         <div>
             <label>Cabang (Hanya jika role Admin):</label>
             <select name="branch_id">
-                <option value="">-- Tidak Ada --</option>
+                <option value="">Tidak Ada</option>
                 <?php foreach ($branches as $branch) : ?>
                     <option value="<?= $branch['branch_id'] ?>" <?= (get_value('branch_id', $old) == $branch['branch_id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($branch['nama_cabang']) ?>
