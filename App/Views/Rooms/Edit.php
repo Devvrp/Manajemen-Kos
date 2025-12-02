@@ -8,7 +8,7 @@
         <div>
             <label>Cabang:</label>
             <select name="branch_id" required>
-                <option value="">-- Pilih Cabang --</option>
+                <option value="">Pilih Cabang</option>
                 <?php foreach ($branches as $branch) : ?>
                     <option value="<?= $branch['branch_id'] ?>" <?= (get_value('branch_id', $old) == $branch['branch_id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($branch['nama_cabang']) ?>

@@ -11,7 +11,7 @@
         <div>
             <label>Target Cabang (Kosongkan = Semua Cabang):</label>
             <select name="branch_id">
-                <option value="">-- Semua Cabang --</option>
+                <option value="">Semua Cabang</option>
                 <?php foreach ($branches as $branch) : ?>
                     <option value="<?= $branch['branch_id'] ?>" <?= (get_value('branch_id', $old) == $branch['branch_id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($branch['nama_cabang']) ?>
